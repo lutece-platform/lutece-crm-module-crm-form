@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+    <bean id="crm-form.hashService" class="fr.paris.lutece.util.signrequest.security.Sha1HashService" />
+    <bean id="crm-form.requestAuthenticatorForWS" class="fr.paris.lutece.util.signrequest.HeaderHashAuthenticator" >
+        <property name="hashService" ref="crm-form.hashService" />
+        <property name="signatureElements" > 
+            <list>
+                <value>id_demand_type</value>
+                <value>id_demand</value>
+                <value>id_crm_user</value>
+                <value>user_guid</value>
+                <value>id_status_crm</value>
+                <value>status_text</value>
+                <value>demand_data</value>
+                <value>notification_object</value>
+                <value>notification_sender</value>
+            </list>
+        </property>
+        <property name="privateKey">
+            <value>change me</value>
+        </property>
+    </bean>
+    <bean id="crm-form.requestAuthenticatorForUrl" class="fr.paris.lutece.util.signrequest.RequestHashAuthenticator" >
+        <property name="hashService" ref="crm-form.hashService" />
+        <property name="signatureElements" > 
+            <list>
+                <value>id_demand_type</value>
+                <value>id_demand</value>
+                <value>id_crm_user</value>
+                <value>demand_data</value>
+            </list>
+        </property>
+        <property name="privateKey">
+            <value>change me</value>
+        </property>
+    </bean>
+    
+    <bean id="crm-form.draftBackupService" class="fr.paris.lutece.plugins.crm.modules.form.service.draft.CRMDraftBackupService">
+    	<property name="blobStoreService">
+    		<bean class="fr.paris.lutece.plugins.blobstore.service.database.DatabaseBlobStoreService" />
+    	</property>
+    </bean>
+</beans>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?><plug-in>
+    <!-- Plugin Informations -->
+    <name>crm-form</name>
+    <class>fr.paris.lutece.plugins.crm.modules.form.service.CRMFormPlugin</class>
+    <version>1.0.0</version>
+    <documentation/>
+    <installation/>
+    <changes/>
+    <user-guide/>
+    <description>module.crm.form.module.description</description>
+    <provider>module.crm.form.module.provider</provider>
+    <provider-url>http://lutece.paris.fr</provider-url>
+    <icon-url>images/admin/skin/plugins/crm/modules/form/crm-form.png</icon-url>
+    <copyright>Copyright 2001-2011 Mairie de Paris</copyright>
+    <core-version-dependency>
+        <min-core-version>3.0.0</min-core-version>
+        <max-core-version/>
+    </core-version-dependency>
+    <db-pool-required>0</db-pool-required>
+
+</plug-in>
