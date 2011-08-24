@@ -143,14 +143,21 @@ public class CRMDraftBackupService implements DraftBackupService
 
         String strStatusText = I18nService.getLocalizedString( Constants.PROPERTY_CRM_STATUS_TEXT_MODIF,
                 request.getLocale(  ) );
-
-        try
+        
+        if ( StringUtils.isNotBlank( strKey ) )
         {
-            CRMWebServices.sendDemandUpdate( strIdDemand, Constants.CRM_STATUS_DRAFT, strStatusText, strKey );
+	        try
+	        {
+	            CRMWebServices.sendDemandUpdate( strIdDemand, Constants.CRM_STATUS_DRAFT, strStatusText, strKey );
+	        }
+	        catch ( HttpAccessException e )
+	        {
+	            _logger.error( e.getMessage(  ), e );
+	        }
         }
-        catch ( HttpAccessException e )
+        else
         {
-            _logger.error( e.getMessage(  ), e );
+        	_logger.error( "No draft found" );
         }
     }
 
