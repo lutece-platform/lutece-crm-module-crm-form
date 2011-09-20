@@ -391,7 +391,7 @@ public class CRMDraftBackupService implements DraftBackupService
             {
                 // bind responses to session if jsonresponse has content - use default otherwise.
                 Map<Integer, List<Response>> mapResponses = JSONUtils.buildListResponses( strDataForm,
-                        request.getLocale(  ) );
+                        request.getLocale(  ), session );
 
                 if ( mapResponses != null )
                 {
