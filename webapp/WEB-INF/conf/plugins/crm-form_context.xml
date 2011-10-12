@@ -12,10 +12,6 @@
                 <value>id_crm_user</value>
                 <value>user_guid</value>
                 <value>id_status_crm</value>
-                <value>status_text</value>
-                <value>demand_data</value>
-                <value>notification_object</value>
-                <value>notification_sender</value>
             </list>
         </property>
         <property name="privateKey">
@@ -29,7 +25,6 @@
                 <value>id_demand_type</value>
                 <value>id_demand</value>
                 <value>id_crm_user</value>
-                <value>demand_data</value>
             </list>
         </property>
         <property name="privateKey">
