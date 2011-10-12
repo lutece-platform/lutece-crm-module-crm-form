@@ -128,8 +128,6 @@ public final class CRMWebServices
         listElements.add( strIdDemandType );
         listElements.add( strIdCRMUser );
         listElements.add( strIdStatusCRM );
-        listElements.add( strStatusText );
-        listElements.add( strData );
 
         return sendDemandAction( strUrl, params, listElements );
     }
@@ -159,8 +157,6 @@ public final class CRMWebServices
         List<String> listElements = new ArrayList<String>(  );
         listElements.add( strIdDemand );
         listElements.add( strIdStatusCRM );
-        listElements.add( strStatusText );
-        listElements.add( strData );
 
         sendDemandAction( strUrl, params, listElements );
     }
