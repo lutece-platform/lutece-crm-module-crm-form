@@ -143,21 +143,21 @@ public class CRMDraftBackupService implements DraftBackupService
 
         String strStatusText = I18nService.getLocalizedString( Constants.PROPERTY_CRM_STATUS_TEXT_MODIF,
                 request.getLocale(  ) );
-        
+
         if ( StringUtils.isNotBlank( strKey ) )
         {
-	        try
-	        {
-	            CRMWebServices.sendDemandUpdate( strIdDemand, Constants.CRM_STATUS_DRAFT, strStatusText, strKey );
-	        }
-	        catch ( HttpAccessException e )
-	        {
-	            _logger.error( e.getMessage(  ), e );
-	        }
+            try
+            {
+                CRMWebServices.sendDemandUpdate( strIdDemand, Constants.CRM_STATUS_DRAFT, strStatusText, strKey );
+            }
+            catch ( HttpAccessException e )
+            {
+                _logger.error( e.getMessage(  ), e );
+            }
         }
         else
         {
-        	_logger.error( "No draft found" );
+            _logger.error( "No draft found" );
         }
     }
 
@@ -238,6 +238,9 @@ public class CRMDraftBackupService implements DraftBackupService
                         request.getLocale(  ) );
                 CRMWebServices.sendDemandUpdate( strDemandId, Constants.CRM_STATUS_VALIDATED, strStatusText, strKey );
                 _blobStoreService.delete( strKey );
+
+                // Remove session attributes
+                removeSessionAttributes( session );
             }
             catch ( HttpAccessException hae )
             {
@@ -372,7 +375,7 @@ public class CRMDraftBackupService implements DraftBackupService
      * Restore a draft
      * @param request the HTTP request
      */
-    void restore( HttpServletRequest request )
+    private void restore( HttpServletRequest request )
     {
         if ( _logger.isDebugEnabled(  ) )
         {
@@ -385,22 +388,27 @@ public class CRMDraftBackupService implements DraftBackupService
 
         if ( StringUtils.isNotBlank( strData ) )
         {
-            String strDataForm = new String( _blobStoreService.getBlob( strData ) );
+            byte[] dataForm = _blobStoreService.getBlob( strData );
 
-            if ( StringUtils.isNotBlank( strDataForm ) )
+            if ( dataForm != null )
             {
-                // bind responses to session if jsonresponse has content - use default otherwise.
-                Map<Integer, List<Response>> mapResponses = JSONUtils.buildListResponses( strDataForm,
-                        request.getLocale(  ), session );
+                String strDataForm = new String( dataForm );
 
-                if ( mapResponses != null )
+                if ( StringUtils.isNotBlank( strDataForm ) )
                 {
-                    if ( _logger.isDebugEnabled(  ) )
-                    {
-                        _logger.debug( "Found reponses - restoring form" );
-                    }
+                    // bind responses to session if jsonresponse has content - use default otherwise.
+                    Map<Integer, List<Response>> mapResponses = JSONUtils.buildListResponses( strDataForm,
+                            request.getLocale(  ), session );
 
-                    FormUtils.restoreResponses( session, mapResponses );
+                    if ( mapResponses != null )
+                    {
+                        if ( _logger.isDebugEnabled(  ) )
+                        {
+                            _logger.debug( "Found reponses - restoring form" );
+                        }
+
+                        FormUtils.restoreResponses( session, mapResponses );
+                    }
                 }
             }
         }
@@ -538,5 +546,16 @@ public class CRMDraftBackupService implements DraftBackupService
         }
 
         return bIsAuthenticated;
+    }
+
+    /**
+     * Remove the session attributes
+     * @param session the session
+     */
+    private void removeSessionAttributes( HttpSession session )
+    {
+        session.removeAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS );
+        session.removeAttribute( Constants.SESSION_ATTRIBUTE_ID_DEMAND_PARAMS );
+        session.removeAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS );
     }
 }
