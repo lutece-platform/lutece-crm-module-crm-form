@@ -2,7 +2,7 @@
     <!-- Plugin Informations -->
     <name>crm-form</name>
     <class>fr.paris.lutece.plugins.crm.modules.form.service.CRMFormPlugin</class>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <documentation/>
     <installation/>
     <changes/>
