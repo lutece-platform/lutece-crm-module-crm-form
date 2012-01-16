@@ -40,28 +40,38 @@ import fr.paris.lutece.plugins.form.business.Form;
 import fr.paris.lutece.plugins.form.business.FormSubmit;
 import fr.paris.lutece.plugins.form.business.Response;
 import fr.paris.lutece.plugins.form.service.draft.DraftBackupService;
+import fr.paris.lutece.plugins.form.service.upload.FormAsynchronousUploadHandler;
 import fr.paris.lutece.plugins.form.utils.FormUtils;
 import fr.paris.lutece.plugins.form.utils.JSONUtils;
+import fr.paris.lutece.portal.service.blobstore.BlobStoreFileItem;
 import fr.paris.lutece.portal.service.blobstore.BlobStoreService;
+import fr.paris.lutece.portal.service.blobstore.NoSuchBlobException;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.message.SiteMessage;
 import fr.paris.lutece.portal.service.message.SiteMessageException;
 import fr.paris.lutece.portal.service.message.SiteMessageService;
 import fr.paris.lutece.portal.service.security.LuteceUser;
 import fr.paris.lutece.portal.service.security.SecurityService;
+import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.util.httpaccess.HttpAccessException;
 
 import net.sf.json.JSONObject;
 
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
 import org.apache.log4j.Logger;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -174,7 +184,9 @@ public class CRMDraftBackupService implements DraftBackupService
 
         if ( StringUtils.isNotBlank( strKey ) )
         {
-            String strJsonResponse = JSONUtils.buildJson( mapResponses, nIdForm );
+            storeFiles( mapResponses, session );
+
+            String strJsonResponse = JSONUtils.buildJson( mapResponses, nIdForm, session );
             _blobStoreService.update( strKey, strJsonResponse.getBytes(  ) );
         }
     }
@@ -237,6 +249,15 @@ public class CRMDraftBackupService implements DraftBackupService
                 String strStatusText = I18nService.getLocalizedString( Constants.PROPERTY_CRM_STATUS_TEXT_VALIDATE,
                         request.getLocale(  ) );
                 CRMWebServices.sendDemandUpdate( strDemandId, Constants.CRM_STATUS_VALIDATED, strStatusText, strKey );
+
+                byte[] dataForm = _blobStoreService.getBlob( strKey );
+
+                if ( dataForm != null )
+                {
+                    String strDataForm = new String( dataForm );
+                    deleteFiles( strDataForm );
+                }
+
                 _blobStoreService.delete( strKey );
 
                 // Remove session attributes
@@ -288,6 +309,91 @@ public class CRMDraftBackupService implements DraftBackupService
         }
 
         return true;
+    }
+
+    /**
+     * Stores all file for the subform to BlobStore and replaces {@link FileItem} by {@link BlobStoreFileItem}
+     * @param mapResponses the map of <id_entry,Responses>
+     * @param session the session
+     */
+    private void storeFiles( Map<Integer, List<Response>> mapResponses, HttpSession session )
+    {
+        for ( Entry<Integer, List<Response>> entryMap : mapResponses.entrySet(  ) )
+        {
+            int nIdEntry = entryMap.getKey(  );
+            String strIdEntry = Integer.toString( nIdEntry );
+            List<FileItem> uploadedFiles = FormAsynchronousUploadHandler.getHandler(  )
+                                                                        .getFileItems( strIdEntry, session.getId(  ) );
+
+            if ( uploadedFiles != null )
+            {
+                List<FileItem> listBlobStoreFileItems = new ArrayList<FileItem>(  );
+
+                for ( int nIndex = 0; nIndex < uploadedFiles.size(  ); nIndex++ )
+                {
+                    FileItem fileItem = uploadedFiles.get( nIndex );
+                    String strFileName = fileItem.getName(  );
+
+                    if ( !( fileItem instanceof BlobStoreFileItem ) )
+                    {
+                        // file is not blobstored yet
+                        String strFileBlobId;
+                        InputStream is = null;
+
+                        try
+                        {
+                            is = fileItem.getInputStream(  );
+                            strFileBlobId = _blobStoreService.storeInputStream( is );
+                        }
+                        catch ( IOException e1 )
+                        {
+                            IOUtils.closeQuietly( is );
+                            _logger.error( e1.getMessage(  ), e1 );
+                            throw new AppException( e1.getMessage(  ), e1 );
+                        }
+
+                        String strJSON = BlobStoreFileItem.buildFileMetadata( strFileName, fileItem.getSize(  ),
+                                strFileBlobId, fileItem.getContentType(  ) );
+
+                        if ( _logger.isDebugEnabled(  ) )
+                        {
+                            _logger.debug( "Storing " + fileItem.getName(  ) + " with : " + strJSON );
+                        }
+
+                        String strFileMetadataBlobId = _blobStoreService.store( strJSON.getBytes(  ) );
+
+                        try
+                        {
+                            BlobStoreFileItem blobStoreFileItem = new BlobStoreFileItem( strFileMetadataBlobId,
+                                    _blobStoreService );
+                            listBlobStoreFileItems.add( blobStoreFileItem );
+                        }
+                        catch ( NoSuchBlobException nsbe )
+                        {
+                            // nothing to do, blob is deleted and draft is not up to date.
+                            if ( _logger.isDebugEnabled(  ) )
+                            {
+                                _logger.debug( nsbe.getMessage(  ) );
+                            }
+                        }
+                        catch ( Exception e )
+                        {
+                            _logger.error( "Unable to create new BlobStoreFileItem " + e.getMessage(  ), e );
+                            throw new AppException( e.getMessage(  ), e );
+                        }
+                    }
+                    else
+                    {
+                        // nothing to do
+                        listBlobStoreFileItems.add( fileItem );
+                    }
+                }
+
+                // replace current file list with the new one
+                uploadedFiles.clear(  );
+                uploadedFiles.addAll( listBlobStoreFileItems );
+            }
+        }
     }
 
     /**
@@ -408,6 +514,38 @@ public class CRMDraftBackupService implements DraftBackupService
                         }
 
                         FormUtils.restoreResponses( session, mapResponses );
+
+                        for ( Entry<Integer, List<Response>> entryMap : mapResponses.entrySet(  ) )
+                        {
+                            int nIdEntry = entryMap.getKey(  );
+                            List<String> listBlobIds = JSONUtils.getBlobIds( strDataForm, nIdEntry );
+
+                            if ( ( listBlobIds != null ) && !listBlobIds.isEmpty(  ) )
+                            {
+                                for ( String strBlobId : listBlobIds )
+                                {
+                                    FileItem fileItem;
+
+                                    try
+                                    {
+                                        fileItem = new BlobStoreFileItem( strBlobId, _blobStoreService );
+                                        FormAsynchronousUploadHandler.getHandler(  )
+                                                                     .addFileItemToUploadedFile( fileItem,
+                                            Integer.toString( nIdEntry ), session );
+                                    }
+                                    catch ( NoSuchBlobException nsbe )
+                                    {
+                                        // file might be deleted
+                                        _logger.debug( nsbe.getMessage(  ) );
+                                    }
+                                    catch ( Exception e )
+                                    {
+                                        throw new AppException( "Unable to parse JSON file metadata for blob id " +
+                                            strBlobId + " : " + e.getMessage(  ), e );
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -442,6 +580,15 @@ public class CRMDraftBackupService implements DraftBackupService
             {
                 // Delete the demand in CRM
                 CRMWebServices.sendDemandDelete( strIdDemand );
+
+                byte[] dataForm = _blobStoreService.getBlob( strData );
+
+                if ( dataForm != null )
+                {
+                    String strDataForm = new String( dataForm );
+                    deleteFiles( strDataForm );
+                }
+
                 // Delete the demand in Blobstore
                 _blobStoreService.delete( strData );
             }
@@ -457,6 +604,48 @@ public class CRMDraftBackupService implements DraftBackupService
         }
 
         return bHasError;
+    }
+
+    /**
+     * Removes all files stored in blobstore for the current subform and strJsonFields.
+     * @param strDataForm the data form
+     */
+    private void deleteFiles( String strDataForm )
+    {
+        List<String> listBlobIds = JSONUtils.getBlobIds( strDataForm );
+
+        if ( ( listBlobIds != null ) && !listBlobIds.isEmpty(  ) )
+        {
+            for ( String strBlobId : listBlobIds )
+            {
+                FileItem fileItem;
+
+                try
+                {
+                    fileItem = new BlobStoreFileItem( strBlobId, _blobStoreService );
+
+                    if ( _logger.isDebugEnabled(  ) )
+                    {
+                        _logger.debug( "Removing file " + fileItem.getName(  ) );
+                    }
+
+                    fileItem.delete(  );
+                }
+                catch ( NoSuchBlobException nsbe )
+                {
+                    // file might be deleted
+                    if ( _logger.isDebugEnabled(  ) )
+                    {
+                        _logger.debug( nsbe.getMessage(  ) );
+                    }
+                }
+                catch ( Exception e )
+                {
+                    throw new AppException( "Unable to parse JSON file metadata for blob id " + strBlobId + " : " +
+                        e.getMessage(  ), e );
+                }
+            }
+        }
     }
 
     /**

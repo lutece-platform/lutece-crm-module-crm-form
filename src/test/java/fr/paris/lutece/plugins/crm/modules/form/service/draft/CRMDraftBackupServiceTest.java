@@ -63,11 +63,11 @@ public class CRMDraftBackupServiceTest extends LuteceTestCase
         int nIdForm = 1;
 
         Map<Integer, List<Response>> mapResponses = buildResponseMap(  );
-
-        byte[] bShouldStore = JSONUtils.buildJson( mapResponses, nIdForm ).getBytes(  );
-
         MokeHttpSession session = new MokeHttpSession(  );
         session.setAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS, strKey );
+
+        byte[] bShouldStore = JSONUtils.buildJson( mapResponses, nIdForm, session ).getBytes(  );
+
         backupService.saveResponses( mapResponses, nIdForm, session );
 
         // get the blob to check values
