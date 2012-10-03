@@ -1,1 +1,1 @@
-<jsp:forward page="../../../../Portal.jsp" />
+<jsp:forward page="../../../../site/Portal.jsp" />
