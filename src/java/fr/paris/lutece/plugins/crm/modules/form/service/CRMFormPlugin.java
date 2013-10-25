@@ -55,5 +55,8 @@ public class CRMFormPlugin extends Plugin
         CRMDraftBackupService draftBackupService = (CRMDraftBackupService) SpringContextService.getBean( 
                 "crm-form.draftBackupService" );
         FormDraftBackupService.setDraftBackupService( draftBackupService );
+        ICRMParametersService cRMParametersService=SpringContextService.getBean( 
+                "crm-form.parametersService" );
+        cRMParametersService.init();
     }
 }

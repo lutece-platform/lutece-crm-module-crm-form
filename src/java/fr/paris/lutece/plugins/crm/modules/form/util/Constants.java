@@ -57,23 +57,16 @@ public final class Constants
     public static final String PARAM_ID_CRM_USER = "id_crm_user";
     public static final String PARAMETER_URL_RETURN = "url_return";
     public static final String PARAMETER_ACTION_NAME = "action";
+    public static final String PARAM_CRM_WEBB_APP_CODE = "crm_web_app_code";
+
 
     //SESSION ATTRIBUTE
     public static final String SESSION_ATTRIBUTE_ID_DEMAND_PARAMS = "FORM_ID_DEMAND";
+    public static final String SESSION_ATTRIBUTE_ID_DEMAND_TYPE_PARAMS = "FORM_ID_DEMAND_TYPE";
     public static final String SESSION_ATTRIBUTE_USER_GUID_PARAMS = "FORM_USER_GUID";
     public static final String SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS = "FORM_DEMAND_DATA";
-
-    // URL
-    public static final String URL_REST_DEMAND_CREATE_BY_USER_GUID = "/rest/crm/demand/createByUserGuid";
-    public static final String URL_REST_DEMAND_CREATE_BY_ID_CRM_USER = "/rest/crm/demand/createByIdCRMUser";
-    public static final String URL_REST_DEMAND = "/rest/crm/demand/";
-    public static final String URL_REST_DEMAND_UPDATE = URL_REST_DEMAND + "update";
-    public static final String URL_REST_DEMAND_DELETE = URL_REST_DEMAND + "delete";
-    public static final String URL_REST_DEMAND_USER_GUID = "/user_guid";
-
-    // PROPERTIES
-    public static final String PROPERTY_WEBSERVICE_CRM_REST_URL = "crm-form.webapp.crm.rest.url";
-
+    public static final String SESSION_ATTRIBUTE_DEMAND_CRM_WEBB_APP_CODE_PARAMS= "FORM_CRM_WEB_APP_CODE";
+    
     // JSON KEY
     public static final String JSON_KEY_FORM = "form";
     public static final String JSON_KEY_SUBFORMS = "subforms";
@@ -86,10 +79,7 @@ public final class Constants
     public static final String PROPERTY_MESSAGE_INFO_REMOVE_DEMAND = "module.crm.form.message.info.removeDemand";
     public static final String PROPERTY_MESSAGE_ERROR_CALLING_WS = "module.crm.form.message.error.calling.ws";
 
-    // CRM STATUS
-    public static final String CRM_STATUS_DRAFT = "0";
-    public static final String CRM_STATUS_VALIDATED = "1";
-
+  
     // ACTIONS
     public static final String ACTION_DO_REMOVE_DRAFT = "do_remove_draft";
     public static final String ACTION_REMOVE_DRAFT = "remove_draft";

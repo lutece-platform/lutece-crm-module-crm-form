@@ -1,40 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-3.0.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
 
-<beans>
-    <bean id="crm-form.hashService" class="fr.paris.lutece.util.signrequest.security.Sha1HashService" />
-    <bean id="crm-form.requestAuthenticatorForWS" class="fr.paris.lutece.util.signrequest.HeaderHashAuthenticator" >
-        <property name="hashService" ref="crm-form.hashService" />
-        <property name="signatureElements" > 
-            <list>
-                <value>id_demand_type</value>
-                <value>id_demand</value>
-                <value>id_crm_user</value>
-                <value>user_guid</value>
-                <value>id_status_crm</value>
-            </list>
-        </property>
-        <property name="privateKey">
-            <value>change me</value>
-        </property>
-    </bean>
-    <bean id="crm-form.requestAuthenticatorForUrl" class="fr.paris.lutece.util.signrequest.RequestHashAuthenticator" >
-        <property name="hashService" ref="crm-form.hashService" />
-        <property name="signatureElements" > 
-            <list>
-                <value>id_demand_type</value>
-                <value>id_demand</value>
-                <value>id_crm_user</value>
-            </list>
-        </property>
-        <property name="privateKey">
-            <value>change me</value>
-        </property>
-    </bean>
-    
-    <bean id="crm-form.draftBackupService" class="fr.paris.lutece.plugins.crm.modules.form.service.draft.CRMDraftBackupService">
+  	
+	<bean id="crm-form.draftBackupService" class="fr.paris.lutece.plugins.crm.modules.form.service.draft.CRMDraftBackupService">
     	<property name="blobStoreService">
     		<bean class="fr.paris.lutece.plugins.blobstore.service.database.DatabaseBlobStoreService" />
     	</property>
+    	<property name="crmParametersService" ref="crm-form.parametersService" />
     </bean>
-</beans>
+    <bean id="crm-form.parametersService" class="fr.paris.lutece.plugins.crm.modules.form.service.CRMParametersService"/>
+    
+    <!--  
+      	Use if you want manage association between form and crm parameters
+      	In this sample the form of id 1 is associated to the demandType 7 
+      				   the form of id 2 is associated to the demand type 8 of the crm web app which have the code gupro 
+      				     	
+     <bean id="crm-form.localParameterFormId2" class="fr.paris.lutece.plugins.crm.modules.form.business.CRMLocalParameters"  p:idForm="1"  p:idDemandeType="7" />
+     <bean id="crm-form.localParameterFormId2" class="fr.paris.lutece.plugins.crm.modules.form.business.CRMLocalParameters"  p:idForm="2"  p:idDemandeType="8"  p:cRMWebAppCode="gupro" />
+     
+     -->
+    </beans>

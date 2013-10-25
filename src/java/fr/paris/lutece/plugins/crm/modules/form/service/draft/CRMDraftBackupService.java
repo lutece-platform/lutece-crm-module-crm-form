@@ -33,9 +33,32 @@
  */
 package fr.paris.lutece.plugins.crm.modules.form.service.draft;
 
-import fr.paris.lutece.plugins.crm.modules.form.service.CRMWebServices;
-import fr.paris.lutece.plugins.crm.modules.form.service.signrequest.CRMRequestAuthenticatorService;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import net.sf.json.JSONObject;
+
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+
+import fr.paris.lutece.plugins.crm.modules.form.service.CRMParametersService;
+import fr.paris.lutece.plugins.crm.modules.form.service.ICRMParametersService;
 import fr.paris.lutece.plugins.crm.modules.form.util.Constants;
+import fr.paris.lutece.plugins.crmclient.service.ICRMClientService;
+import fr.paris.lutece.plugins.crmclient.service.authenticator.IAuthenticatorService;
+import fr.paris.lutece.plugins.crmclient.util.CRMException;
+import fr.paris.lutece.plugins.crmclient.util.CrmClientConstants;
 import fr.paris.lutece.plugins.form.business.Form;
 import fr.paris.lutece.plugins.form.business.FormSubmit;
 import fr.paris.lutece.plugins.form.business.Response;
@@ -54,27 +77,6 @@ import fr.paris.lutece.portal.service.security.LuteceUser;
 import fr.paris.lutece.portal.service.security.SecurityService;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
-import fr.paris.lutece.util.httpaccess.HttpAccessException;
-
-import net.sf.json.JSONObject;
-
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-
-import org.apache.log4j.Logger;
-
-import java.io.IOException;
-import java.io.InputStream;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 
 /**
@@ -84,6 +86,12 @@ public class CRMDraftBackupService implements DraftBackupService
 {
     private static Logger _logger = Logger.getLogger( "lutece.crm" );
     private BlobStoreService _blobStoreService;
+    @Inject	
+    private ICRMParametersService _crmParametersService;
+    @Inject	
+    private ICRMClientService  _crmClientService;
+    @Inject
+    private IAuthenticatorService _authenticatorService;
 
     /**
      * {@inheritDoc }
@@ -99,9 +107,11 @@ public class CRMDraftBackupService implements DraftBackupService
     public boolean preProcessRequest( HttpServletRequest request, Form form )
         throws SiteMessageException
     {
-        if ( !isRequestAuthenticated( request ) )
+        if ( !isRequestAuthenticated( request ,form) )
         {
-            SiteMessageService.setMessage( request, Constants.PROPERTY_MESSAGE_STOP_ACCESS_DENIED, SiteMessage.TYPE_STOP );
+            
+        	SiteMessageService.setMessage( request, Constants.PROPERTY_MESSAGE_STOP_ACCESS_DENIED, SiteMessage.TYPE_STOP );
+            
         }
 
         // handle delete actions
@@ -109,9 +119,16 @@ public class CRMDraftBackupService implements DraftBackupService
         {
             return true;
         }
-
+        
+        
+        //update session attributes 
+        if(!StringUtils.isEmpty(request.getParameter( Constants.PARAM_ID_DEMAND )))
+        {
+        	updateSessionAttributes(request, form);
+        }
+        	
         // create if the draft does not exist
-        if ( !existsDraft( request ) )
+        else if ( !existsDraft( request ,form ) )
         {
             create( request, form );
         }
@@ -150,21 +167,19 @@ public class CRMDraftBackupService implements DraftBackupService
         // get draft blob id
         String strKey = (String) session.getAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS );
         String strIdDemand = (String) session.getAttribute( Constants.SESSION_ATTRIBUTE_ID_DEMAND_PARAMS );
-
+        String strCrmWebAppCode = (String) session.getAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_CRM_WEBB_APP_CODE_PARAMS );
         String strStatusText = I18nService.getLocalizedString( Constants.PROPERTY_CRM_STATUS_TEXT_MODIF,
                 request.getLocale(  ) );
 
         if ( StringUtils.isNotBlank( strKey ) )
         {
-            try
-            {
-                CRMWebServices.sendDemandUpdate( strIdDemand, Constants.CRM_STATUS_DRAFT, strStatusText, strKey );
-            }
-            catch ( HttpAccessException e )
-            {
-                _logger.error( e.getMessage(  ), e );
-            }
-        }
+        	try {
+        		_crmClientService.sendUpdateDemand( strIdDemand,  strStatusText, strCrmWebAppCode,CrmClientConstants.CRM_STATUS_DRAFT,strKey );
+
+			} catch (CRMException e) {
+				AppLogService.error(e);
+			}
+                }
         else
         {
             _logger.error( "No draft found" );
@@ -241,15 +256,21 @@ public class CRMDraftBackupService implements DraftBackupService
 
         String strKey = (String) session.getAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS );
         String strDemandId = (String) session.getAttribute( Constants.SESSION_ATTRIBUTE_ID_DEMAND_PARAMS );
-
+        String strCrmWebAppCode = (String) session.getAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_CRM_WEBB_APP_CODE_PARAMS );
+        
         if ( StringUtils.isNotBlank( strKey ) )
         {
-            try
-            {
                 String strStatusText = I18nService.getLocalizedString( Constants.PROPERTY_CRM_STATUS_TEXT_VALIDATE,
                         request.getLocale(  ) );
-                CRMWebServices.sendDemandUpdate( strDemandId, Constants.CRM_STATUS_VALIDATED, strStatusText, strKey );
-
+               
+               try
+               {
+            	   _crmClientService.sendUpdateDemand( strDemandId,  strStatusText, strCrmWebAppCode, CrmClientConstants.CRM_STATUS_VALIDATED,strKey );
+                
+               }
+              catch (CRMException e) {
+   					AppLogService.error(e);
+              }
                 byte[] dataForm = _blobStoreService.getBlob( strKey );
 
                 if ( dataForm != null )
@@ -262,11 +283,7 @@ public class CRMDraftBackupService implements DraftBackupService
 
                 // Remove session attributes
                 removeSessionAttributes( session );
-            }
-            catch ( HttpAccessException hae )
-            {
-                _logger.error( hae.getMessage(  ), hae );
-            }
+            
         }
     }
 
@@ -275,41 +292,22 @@ public class CRMDraftBackupService implements DraftBackupService
      * @param request the HTTP request
      * @return true if the draft already exists, false otherwise
      */
-    private boolean existsDraft( HttpServletRequest request )
+    private boolean existsDraft( HttpServletRequest request, Form form )
     {
         HttpSession session = request.getSession( true );
-
-        String strIdDemandType = request.getParameter( Constants.PARAM_ID_DEMAND_TYPE );
-        String strIdDemand = request.getParameter( Constants.PARAM_ID_DEMAND );
-
-        if ( StringUtils.isNotBlank( strIdDemandType ) )
+        String strIdDememandType = _crmParametersService.getIdTypeDemande(request, form);
+        //test if the demand type corresponds to the demand store in session 
+        if ( session.getAttribute(Constants.SESSION_ATTRIBUTE_ID_DEMAND_PARAMS ) != null  && ( strIdDememandType == null ||( session.getAttribute(Constants.SESSION_ATTRIBUTE_ID_DEMAND_TYPE_PARAMS ) != null && 
+        	  ((String)session.getAttribute(Constants.SESSION_ATTRIBUTE_ID_DEMAND_TYPE_PARAMS )).equals(strIdDememandType))	)
+        		)
         {
-            return false;
+            return true;
         }
-        else if ( StringUtils.isNotBlank( strIdDemand ) )
-        {
-            session.setAttribute( Constants.SESSION_ATTRIBUTE_ID_DEMAND_PARAMS, strIdDemand );
+       
 
-            try
-            {
-                String strUserGuid = CRMWebServices.getUserGuidFromIdDemand( strIdDemand );
-                session.setAttribute( Constants.SESSION_ATTRIBUTE_USER_GUID_PARAMS, strUserGuid );
-            }
-            catch ( HttpAccessException ex )
-            {
-                _logger.error( "Error calling WebService : " + ex.getMessage(  ), ex );
-            }
-
-            String strDemandData = request.getParameter( Constants.PARAM_DEMAND_DATA );
-
-            if ( StringUtils.isNotBlank( strDemandData ) )
-            {
-                session.setAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS, strDemandData );
-            }
-        }
-
-        return true;
-    }
+        return false;
+        
+   }
 
     /**
      * Stores all file for the subform to BlobStore and replaces {@link FileItem} by {@link BlobStoreFileItem}
@@ -405,7 +403,8 @@ public class CRMDraftBackupService implements DraftBackupService
     {
         HttpSession session = request.getSession( true );
 
-        String strDemandType = request.getParameter( Constants.PARAM_ID_DEMAND_TYPE );
+        String strDemandType = _crmParametersService.getIdTypeDemande(request, form);
+        String strCrmWebAppCode = _crmParametersService.getCrmWebAppCode(request, form);
 
         if ( StringUtils.isNotBlank( strDemandType ) )
         {
@@ -437,30 +436,28 @@ public class CRMDraftBackupService implements DraftBackupService
 
                 if ( StringUtils.isNotBlank( strUserGuid ) )
                 {
-                    strIdDemand = CRMWebServices.sendDemandCreateByUserGuid( strDemandType, strUserGuid,
-                            Constants.CRM_STATUS_DRAFT, strStatusText, strData );
+                    strIdDemand = _crmClientService.sendCreateDemandByUserGuid( strDemandType, strUserGuid,
+                    		CrmClientConstants.CRM_STATUS_DRAFT, strStatusText, strData,strCrmWebAppCode );
+           
                 }
                 else if ( StringUtils.isNotBlank( strIdCRMUser ) )
                 {
-                    strIdDemand = CRMWebServices.sendDemandCreateByIdCRMUser( strDemandType, strIdCRMUser,
-                            Constants.CRM_STATUS_DRAFT, strStatusText, strData );
+                    strIdDemand = _crmClientService.sendCreateDemandByIdCRMUser( strDemandType, strIdCRMUser,
+                    		CrmClientConstants.CRM_STATUS_DRAFT, strStatusText, strData,strCrmWebAppCode );
                 }
 
                 if ( StringUtils.isNotBlank( strIdDemand ) && !Constants.INVALID_ID.equals( strIdDemand ) )
                 {
-                    session.setAttribute( Constants.SESSION_ATTRIBUTE_ID_DEMAND_PARAMS, strIdDemand );
-
+                    
                     try
                     {
-                        strUserGuid = CRMWebServices.getUserGuidFromIdDemand( strIdDemand );
-                        session.setAttribute( Constants.SESSION_ATTRIBUTE_USER_GUID_PARAMS, strUserGuid );
-                    }
-                    catch ( HttpAccessException ex )
+                        strUserGuid = _crmClientService.getUserGuidFromIdDemand( strIdDemand , strCrmWebAppCode);
+                     }
+                    catch ( CRMException ex )
                     {
                         _logger.error( "Error calling WebService : " + ex.getMessage(  ), ex );
                     }
-
-                    session.setAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS, strData );
+                    updateSessionAttributes(session, strIdDemand,strDemandType, strData, strUserGuid, strCrmWebAppCode);
                 }
                 else
                 {
@@ -572,6 +569,8 @@ public class CRMDraftBackupService implements DraftBackupService
 
         String strIdDemand = request.getParameter( Constants.PARAM_ID_DEMAND );
         String strData = request.getParameter( Constants.PARAM_DEMAND_DATA );
+        String strCrmWebAppCode = request.getParameter(Constants.PARAM_CRM_WEBB_APP_CODE);
+
 
         if ( StringUtils.isNotBlank( strIdDemand ) && StringUtils.isNumeric( strIdDemand ) &&
                 StringUtils.isNotBlank( strData ) )
@@ -579,7 +578,7 @@ public class CRMDraftBackupService implements DraftBackupService
             try
             {
                 // Delete the demand in CRM
-                CRMWebServices.sendDemandDelete( strIdDemand );
+            	_crmClientService.sendDeleteDemand( strIdDemand ,strCrmWebAppCode);
 
                 byte[] dataForm = _blobStoreService.getBlob( strData );
 
@@ -592,7 +591,7 @@ public class CRMDraftBackupService implements DraftBackupService
                 // Delete the demand in Blobstore
                 _blobStoreService.delete( strData );
             }
-            catch ( HttpAccessException ex )
+            catch ( CRMException ex )
             {
                 _logger.error( "Error deleting draft : " + ex.getMessage(  ), ex );
                 bHasError = true;
@@ -715,26 +714,88 @@ public class CRMDraftBackupService implements DraftBackupService
      * @param request the HTTP request
      * @return true if it is authenticated, false otherwise
      */
-    private boolean isRequestAuthenticated( HttpServletRequest request )
+    private boolean isRequestAuthenticated( HttpServletRequest request, Form form )
     {
         boolean bIsAuthenticated = true;
-        String strDemandType = request.getParameter( Constants.PARAM_ID_DEMAND_TYPE );
+        String strDemandType = _crmParametersService.getIdTypeDemande(request, form);
+        String strCrmWebAppCode = _crmParametersService.getCrmWebAppCode(request, form);
         String strDemand = request.getParameter( Constants.PARAM_ID_DEMAND );
         String strAction = request.getParameter( Constants.PARAMETER_ACTION_NAME );
-
         if ( StringUtils.isNotBlank( strAction ) && Constants.ACTION_DO_REMOVE_DRAFT.equals( strAction ) )
         {
-            bIsAuthenticated = CRMRequestAuthenticatorService.getRequestAuthenticatorForWS(  )
+        
+            bIsAuthenticated = _authenticatorService.getRequestAuthenticatorForWs(strCrmWebAppCode  )
                                                              .isRequestAuthenticated( request );
         }
-        else if ( StringUtils.isNotBlank( strDemandType ) || StringUtils.isNotBlank( strDemand ) ||
+        else if ( !_crmParametersService.isEnabledLocalCrmParameters() && ( StringUtils.isNotBlank( strDemandType ) || StringUtils.isNotBlank( strDemand )) ||
                 ( StringUtils.isNotBlank( strAction ) && Constants.ACTION_REMOVE_DRAFT.equals( strAction ) ) )
         {
-            bIsAuthenticated = CRMRequestAuthenticatorService.getRequestAuthenticatorForUrl(  )
+            bIsAuthenticated = _authenticatorService.getRequestAuthenticatorForUrl( strCrmWebAppCode )
                                                              .isRequestAuthenticated( request );
         }
 
         return bIsAuthenticated;
+    }
+    
+    
+    
+    /**
+     * Update session attributes
+     * @param request the HTTP request
+     * @param form the form object
+     *
+     */
+    private void updateSessionAttributes( HttpServletRequest request, Form form )
+    {
+        HttpSession session = request.getSession( true );
+        String strIdDemand = request.getParameter( Constants.PARAM_ID_DEMAND );
+        String strCrmWebAppCode = _crmParametersService.getCrmWebAppCode(request, form);
+        String strUserGuid=null; 
+        try
+            {
+               strUserGuid = _crmClientService.getUserGuidFromIdDemand( strIdDemand , strCrmWebAppCode);
+            }
+            catch ( CRMException ex )
+            {
+                _logger.error( "Error calling WebService : " + ex.getMessage(  ), ex );
+            }
+
+        String strDemandData = request.getParameter( Constants.PARAM_DEMAND_DATA );
+        updateSessionAttributes(session, strIdDemand,null, strDemandData, strUserGuid, strCrmWebAppCode);
+       }
+    
+  
+   /**
+    * Update session attributes
+    * @param session the Http session
+    * @param strIdDemand the demand id
+    * @param strIdDemandType the demand type id
+    * @param strDemandData the demad data 
+    * @param strUserGuid the user guid
+    * @param strCrmWebAppCode the web app code
+    */
+    private void updateSessionAttributes(HttpSession session,String strIdDemand,String strIdDemandType,String strDemandData,String strUserGuid,String strCrmWebAppCode )
+    {
+    	if(!StringUtils.isEmpty(strIdDemand))
+    	{
+    		session.setAttribute( Constants.SESSION_ATTRIBUTE_ID_DEMAND_PARAMS, strIdDemand );
+    	}
+    	if(!StringUtils.isEmpty(strIdDemandType))
+    	{
+    		session.setAttribute( Constants.SESSION_ATTRIBUTE_ID_DEMAND_TYPE_PARAMS, strIdDemandType );
+    	}
+    	if(!StringUtils.isEmpty(strDemandData))
+    	{
+    		session.setAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS, strDemandData );
+    	}
+    	if(!StringUtils.isEmpty(strUserGuid))
+    	{
+    		session.setAttribute( Constants.SESSION_ATTRIBUTE_USER_GUID_PARAMS, strUserGuid );
+    	}
+        if(!StringUtils.isEmpty(strCrmWebAppCode))
+    	{
+        	session.setAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_CRM_WEBB_APP_CODE_PARAMS, strCrmWebAppCode );
+    	}
     }
 
     /**
@@ -743,8 +804,23 @@ public class CRMDraftBackupService implements DraftBackupService
      */
     private void removeSessionAttributes( HttpSession session )
     {
+    	session.removeAttribute( Constants.SESSION_ATTRIBUTE_ID_DEMAND_PARAMS );
+    	session.removeAttribute( Constants.SESSION_ATTRIBUTE_ID_DEMAND_TYPE_PARAMS);
         session.removeAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS );
-        session.removeAttribute( Constants.SESSION_ATTRIBUTE_ID_DEMAND_PARAMS );
-        session.removeAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS );
+        session.removeAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_CRM_WEBB_APP_CODE_PARAMS);
+        session.removeAttribute(Constants.SESSION_ATTRIBUTE_USER_GUID_PARAMS);
     }
+
+	
+    /**
+     * set _crmParametersService
+     * @param _crmParametersService _crmParametersService
+     */
+	public void setCrmParametersService(CRMParametersService crmParametersService) {
+		this._crmParametersService = crmParametersService;
+	}
+
+	
+	
+	
 }
