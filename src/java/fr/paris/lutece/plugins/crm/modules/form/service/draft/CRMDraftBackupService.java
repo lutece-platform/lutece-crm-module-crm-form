@@ -294,12 +294,8 @@ public class CRMDraftBackupService implements DraftBackupService
      */
     private boolean existsDraft( HttpServletRequest request, Form form )
     {
-        HttpSession session = request.getSession( true );
-        String strIdDememandType = _crmParametersService.getIdTypeDemande(request, form);
-        //test if the demand type corresponds to the demand store in session 
-        if ( session.getAttribute(Constants.SESSION_ATTRIBUTE_ID_DEMAND_PARAMS ) != null  && ( strIdDememandType == null ||( session.getAttribute(Constants.SESSION_ATTRIBUTE_ID_DEMAND_TYPE_PARAMS ) != null && 
-        	  ((String)session.getAttribute(Constants.SESSION_ATTRIBUTE_ID_DEMAND_TYPE_PARAMS )).equals(strIdDememandType))	)
-        		)
+        
+    	if (request.getParameter( Constants.PARAM_DEMAND_DATA ) != null) 
         {
             return true;
         }
@@ -457,7 +453,7 @@ public class CRMDraftBackupService implements DraftBackupService
                     {
                         _logger.error( "Error calling WebService : " + ex.getMessage(  ), ex );
                     }
-                    updateSessionAttributes(session, strIdDemand,strDemandType, strData, strUserGuid, strCrmWebAppCode);
+                    updateSessionAttributes(session, strIdDemand,strData, strUserGuid, strCrmWebAppCode);
                 }
                 else
                 {
@@ -761,7 +757,7 @@ public class CRMDraftBackupService implements DraftBackupService
             }
 
         String strDemandData = request.getParameter( Constants.PARAM_DEMAND_DATA );
-        updateSessionAttributes(session, strIdDemand,null, strDemandData, strUserGuid, strCrmWebAppCode);
+        updateSessionAttributes(session, strIdDemand,strDemandData, strUserGuid, strCrmWebAppCode);
        }
     
   
@@ -769,20 +765,15 @@ public class CRMDraftBackupService implements DraftBackupService
     * Update session attributes
     * @param session the Http session
     * @param strIdDemand the demand id
-    * @param strIdDemandType the demand type id
     * @param strDemandData the demad data 
     * @param strUserGuid the user guid
     * @param strCrmWebAppCode the web app code
     */
-    private void updateSessionAttributes(HttpSession session,String strIdDemand,String strIdDemandType,String strDemandData,String strUserGuid,String strCrmWebAppCode )
+    private void updateSessionAttributes(HttpSession session,String strIdDemand,String strDemandData,String strUserGuid,String strCrmWebAppCode )
     {
     	if(!StringUtils.isEmpty(strIdDemand))
     	{
     		session.setAttribute( Constants.SESSION_ATTRIBUTE_ID_DEMAND_PARAMS, strIdDemand );
-    	}
-    	if(!StringUtils.isEmpty(strIdDemandType))
-    	{
-    		session.setAttribute( Constants.SESSION_ATTRIBUTE_ID_DEMAND_TYPE_PARAMS, strIdDemandType );
     	}
     	if(!StringUtils.isEmpty(strDemandData))
     	{
@@ -805,8 +796,7 @@ public class CRMDraftBackupService implements DraftBackupService
     private void removeSessionAttributes( HttpSession session )
     {
     	session.removeAttribute( Constants.SESSION_ATTRIBUTE_ID_DEMAND_PARAMS );
-    	session.removeAttribute( Constants.SESSION_ATTRIBUTE_ID_DEMAND_TYPE_PARAMS);
-        session.removeAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS );
+    	session.removeAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS );
         session.removeAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_CRM_WEBB_APP_CODE_PARAMS);
         session.removeAttribute(Constants.SESSION_ATTRIBUTE_USER_GUID_PARAMS);
     }

@@ -62,7 +62,6 @@ public final class Constants
 
     //SESSION ATTRIBUTE
     public static final String SESSION_ATTRIBUTE_ID_DEMAND_PARAMS = "FORM_ID_DEMAND";
-    public static final String SESSION_ATTRIBUTE_ID_DEMAND_TYPE_PARAMS = "FORM_ID_DEMAND_TYPE";
     public static final String SESSION_ATTRIBUTE_USER_GUID_PARAMS = "FORM_USER_GUID";
     public static final String SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS = "FORM_DEMAND_DATA";
     public static final String SESSION_ATTRIBUTE_DEMAND_CRM_WEBB_APP_CODE_PARAMS= "FORM_CRM_WEB_APP_CODE";
