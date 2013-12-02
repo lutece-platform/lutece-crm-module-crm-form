@@ -34,10 +34,10 @@
 package fr.paris.lutece.plugins.crm.modules.form.service.draft;
 
 import fr.paris.lutece.plugins.crm.modules.form.util.Constants;
-import fr.paris.lutece.plugins.form.business.EntryTypeText;
-import fr.paris.lutece.plugins.form.business.IEntry;
-import fr.paris.lutece.plugins.form.business.Response;
 import fr.paris.lutece.plugins.form.utils.JSONUtils;
+import fr.paris.lutece.plugins.genericattributes.business.Entry;
+import fr.paris.lutece.plugins.genericattributes.business.EntryType;
+import fr.paris.lutece.plugins.genericattributes.business.Response;
 import fr.paris.lutece.portal.service.blobstore.BlobStoreService;
 import fr.paris.lutece.test.LuteceTestCase;
 import fr.paris.lutece.test.MokeHttpSession;
@@ -66,7 +66,7 @@ public class CRMDraftBackupServiceTest extends LuteceTestCase
         MokeHttpSession session = new MokeHttpSession(  );
         session.setAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS, strKey );
 
-        byte[] bShouldStore = JSONUtils.buildJson( mapResponses, nIdForm, session ).getBytes(  );
+        byte[] bShouldStore = JSONUtils.buildJson( mapResponses, nIdForm, session.getId( ) ).getBytes( );
 
         backupService.saveResponses( mapResponses, nIdForm, session );
 
@@ -81,18 +81,23 @@ public class CRMDraftBackupServiceTest extends LuteceTestCase
         Map<Integer, List<Response>> mapResponses = new HashMap<Integer, List<Response>>(  );
 
         // create a minimal test
+        EntryType entryType = new EntryType( );
+        entryType.setBeanName( "form.entryTypeText" );
+
         Response response1 = new Response(  );
-        IEntry entry1 = new EntryTypeText(  );
+        Entry entry1 = new Entry( );
         entry1.setIdEntry( 1 );
+        entry1.setEntryType( entryType );
         response1.setEntry( entry1 );
-        response1.setValueResponse( "value1".getBytes(  ) );
+        response1.setResponseValue( "value1" );
         mapResponses.put( Integer.valueOf( 1 ), Collections.singletonList( response1 ) );
 
         Response response2 = new Response(  );
-        IEntry entry2 = new EntryTypeText(  );
+        Entry entry2 = new Entry( );
         entry2.setIdEntry( 2 );
+        entry2.setEntryType( entryType );
         response2.setEntry( entry2 );
-        response2.setValueResponse( "value2".getBytes(  ) );
+        response2.setResponseValue( "value2" );
         mapResponses.put( Integer.valueOf( 2 ), Collections.singletonList( response2 ) );
 
         return mapResponses;

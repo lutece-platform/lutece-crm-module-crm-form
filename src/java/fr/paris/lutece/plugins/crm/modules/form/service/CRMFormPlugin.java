@@ -41,22 +41,24 @@ import fr.paris.lutece.portal.service.spring.SpringContextService;
 
 /**
  * CRMFormPlugin
- *
+ * 
  */
 public class CRMFormPlugin extends Plugin
 {
+    /**
+     * CRM Form plugin name
+     */
     public static final String PLUGIN_NAME = "crm-form";
 
     /**
      * {@inheritDoc}
      */
-    public void init(  )
+    public void init( )
     {
-        CRMDraftBackupService draftBackupService = (CRMDraftBackupService) SpringContextService.getBean( 
-                "crm-form.draftBackupService" );
+        CRMDraftBackupService draftBackupService = (CRMDraftBackupService) SpringContextService
+                .getBean( "crm-form.draftBackupService" );
         FormDraftBackupService.setDraftBackupService( draftBackupService );
-        ICRMParametersService cRMParametersService=SpringContextService.getBean( 
-                "crm-form.parametersService" );
-        cRMParametersService.init();
+        ICRMParametersService cRMParametersService = SpringContextService.getBean( "crm-form.parametersService" );
+        cRMParametersService.init( );
     }
 }

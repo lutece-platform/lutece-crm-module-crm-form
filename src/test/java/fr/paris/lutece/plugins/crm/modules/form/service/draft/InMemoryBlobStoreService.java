@@ -35,14 +35,13 @@ package fr.paris.lutece.plugins.crm.modules.form.service.draft;
 
 import fr.paris.lutece.portal.service.blobstore.BlobStoreService;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.IOException;
 import java.io.InputStream;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import org.apache.commons.io.IOUtils;
 
 
 public class InMemoryBlobStoreService implements BlobStoreService
@@ -53,16 +52,28 @@ public class InMemoryBlobStoreService implements BlobStoreService
     private static final long serialVersionUID = 1L;
     private Map<String, byte[]> _blobStore = new HashMap<String, byte[]>(  );
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void delete( String strKey )
     {
         _blobStore.remove( strKey );
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public byte[] getBlob( String strKey )
     {
         return _blobStore.get( strKey );
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public InputStream getBlobInputStream( String strKey )
     {
         byte[] bValue = getBlob( strKey );
@@ -75,26 +86,46 @@ public class InMemoryBlobStoreService implements BlobStoreService
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getBlobUrl( String strKey )
     {
         throw new UnsupportedOperationException(  );
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getFileUrl( String strKey )
     {
         throw new UnsupportedOperationException(  );
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getName(  )
     {
         return "InMemoryBlobStore - for testing purpose ONLY";
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void setName( String strName )
     {
         // nothing
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String store( byte[] blob )
     {
         String strKey = generateKey(  );
@@ -103,6 +134,10 @@ public class InMemoryBlobStoreService implements BlobStoreService
         return strKey;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String storeInputStream( InputStream inputStream )
     {
         try
@@ -115,11 +150,19 @@ public class InMemoryBlobStoreService implements BlobStoreService
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void update( String strKey, byte[] blob )
     {
         _blobStore.put( strKey, blob );
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void updateInputStream( String strKey, InputStream inputStream )
     {
         try
