@@ -33,8 +33,6 @@
  */
 package fr.paris.lutece.plugins.crm.modules.form.service.draft;
 
-import fr.paris.lutece.portal.service.blobstore.BlobStoreService;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -43,14 +41,16 @@ import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 
+import fr.paris.lutece.plugins.blobstore.service.IBlobStoreService;
 
-public class InMemoryBlobStoreService implements BlobStoreService
+
+public class InMemoryBlobStoreService implements IBlobStoreService
 {
     /**
      *
      */
     private static final long serialVersionUID = 1L;
-    private Map<String, byte[]> _blobStore = new HashMap<String, byte[]>(  );
+    private final Map<String, byte[]> _blobStore = new HashMap<String, byte[]>( );
 
     /**
      * {@inheritDoc}
@@ -92,7 +92,7 @@ public class InMemoryBlobStoreService implements BlobStoreService
     @Override
     public String getBlobUrl( String strKey )
     {
-        throw new UnsupportedOperationException(  );
+        throw new UnsupportedOperationException( );
     }
 
     /**
@@ -101,14 +101,14 @@ public class InMemoryBlobStoreService implements BlobStoreService
     @Override
     public String getFileUrl( String strKey )
     {
-        throw new UnsupportedOperationException(  );
+        throw new UnsupportedOperationException( );
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getName(  )
+    public String getName( )
     {
         return "InMemoryBlobStore - for testing purpose ONLY";
     }
@@ -128,7 +128,7 @@ public class InMemoryBlobStoreService implements BlobStoreService
     @Override
     public String store( byte[] blob )
     {
-        String strKey = generateKey(  );
+        String strKey = generateKey( );
         _blobStore.put( strKey, blob );
 
         return strKey;
@@ -179,8 +179,8 @@ public class InMemoryBlobStoreService implements BlobStoreService
      * Generates an id
      * @return the id
      */
-    private String generateKey(  )
+    private String generateKey( )
     {
-        return UUID.randomUUID(  ).toString(  );
+        return UUID.randomUUID( ).toString( );
     }
 }

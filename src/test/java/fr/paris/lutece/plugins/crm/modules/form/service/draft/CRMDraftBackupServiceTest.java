@@ -33,28 +33,28 @@
  */
 package fr.paris.lutece.plugins.crm.modules.form.service.draft;
 
-import fr.paris.lutece.plugins.crm.modules.form.util.Constants;
-import fr.paris.lutece.plugins.form.utils.JSONUtils;
-import fr.paris.lutece.plugins.genericattributes.business.Entry;
-import fr.paris.lutece.plugins.genericattributes.business.EntryType;
-import fr.paris.lutece.plugins.genericattributes.business.Response;
-import fr.paris.lutece.portal.service.blobstore.BlobStoreService;
-import fr.paris.lutece.test.LuteceTestCase;
-import fr.paris.lutece.test.MokeHttpSession;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import fr.paris.lutece.plugins.blobstore.service.IBlobStoreService;
+import fr.paris.lutece.plugins.crm.modules.form.util.Constants;
+import fr.paris.lutece.plugins.form.utils.JSONUtils;
+import fr.paris.lutece.plugins.genericattributes.business.Entry;
+import fr.paris.lutece.plugins.genericattributes.business.EntryType;
+import fr.paris.lutece.plugins.genericattributes.business.Response;
+import fr.paris.lutece.test.LuteceTestCase;
+import fr.paris.lutece.test.MokeHttpSession;
+
 
 public class CRMDraftBackupServiceTest extends LuteceTestCase
 {
-    public void testSaveResponses(  )
+    public void testSaveResponses( )
     {
-        CRMDraftBackupService backupService = new CRMDraftBackupService(  );
-        BlobStoreService blobStore = new InMemoryBlobStoreService(  );
+        CRMDraftBackupService backupService = new CRMDraftBackupService( );
+        IBlobStoreService blobStore = new InMemoryBlobStoreService( );
         backupService.setBlobStoreService( blobStore );
 
         // create an entry
@@ -62,8 +62,8 @@ public class CRMDraftBackupServiceTest extends LuteceTestCase
 
         int nIdForm = 1;
 
-        Map<Integer, List<Response>> mapResponses = buildResponseMap(  );
-        MokeHttpSession session = new MokeHttpSession(  );
+        Map<Integer, List<Response>> mapResponses = buildResponseMap( );
+        MokeHttpSession session = new MokeHttpSession( );
         session.setAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS, strKey );
 
         byte[] bShouldStore = JSONUtils.buildJson( mapResponses, nIdForm, session.getId( ) ).getBytes( );
@@ -76,15 +76,15 @@ public class CRMDraftBackupServiceTest extends LuteceTestCase
         assertTrue( Arrays.equals( bShouldStore, bStored ) );
     }
 
-    private Map<Integer, List<Response>> buildResponseMap(  )
+    private Map<Integer, List<Response>> buildResponseMap( )
     {
-        Map<Integer, List<Response>> mapResponses = new HashMap<Integer, List<Response>>(  );
+        Map<Integer, List<Response>> mapResponses = new HashMap<Integer, List<Response>>( );
 
         // create a minimal test
         EntryType entryType = new EntryType( );
         entryType.setBeanName( "form.entryTypeText" );
 
-        Response response1 = new Response(  );
+        Response response1 = new Response( );
         Entry entry1 = new Entry( );
         entry1.setIdEntry( 1 );
         entry1.setEntryType( entryType );
@@ -92,7 +92,7 @@ public class CRMDraftBackupServiceTest extends LuteceTestCase
         response1.setResponseValue( "value1" );
         mapResponses.put( Integer.valueOf( 1 ), Collections.singletonList( response1 ) );
 
-        Response response2 = new Response(  );
+        Response response2 = new Response( );
         Entry entry2 = new Entry( );
         entry2.setIdEntry( 2 );
         entry2.setEntryType( entryType );

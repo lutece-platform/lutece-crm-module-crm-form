@@ -33,32 +33,6 @@
  */
 package fr.paris.lutece.plugins.crm.modules.form.service.draft;
 
-import fr.paris.lutece.plugins.crm.modules.form.service.CRMParametersService;
-import fr.paris.lutece.plugins.crm.modules.form.service.ICRMParametersService;
-import fr.paris.lutece.plugins.crm.modules.form.util.Constants;
-import fr.paris.lutece.plugins.crmclient.service.ICRMClientService;
-import fr.paris.lutece.plugins.crmclient.service.authenticator.IAuthenticatorService;
-import fr.paris.lutece.plugins.crmclient.util.CRMException;
-import fr.paris.lutece.plugins.crmclient.util.CrmClientConstants;
-import fr.paris.lutece.plugins.form.business.Form;
-import fr.paris.lutece.plugins.form.business.FormSubmit;
-import fr.paris.lutece.plugins.form.service.draft.DraftBackupService;
-import fr.paris.lutece.plugins.form.service.upload.FormAsynchronousUploadHandler;
-import fr.paris.lutece.plugins.form.utils.FormUtils;
-import fr.paris.lutece.plugins.form.utils.JSONUtils;
-import fr.paris.lutece.plugins.genericattributes.business.Response;
-import fr.paris.lutece.portal.service.blobstore.BlobStoreFileItem;
-import fr.paris.lutece.portal.service.blobstore.BlobStoreService;
-import fr.paris.lutece.portal.service.blobstore.NoSuchBlobException;
-import fr.paris.lutece.portal.service.i18n.I18nService;
-import fr.paris.lutece.portal.service.message.SiteMessage;
-import fr.paris.lutece.portal.service.message.SiteMessageException;
-import fr.paris.lutece.portal.service.message.SiteMessageService;
-import fr.paris.lutece.portal.service.security.LuteceUser;
-import fr.paris.lutece.portal.service.security.SecurityService;
-import fr.paris.lutece.portal.service.util.AppException;
-import fr.paris.lutece.portal.service.util.AppLogService;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -78,6 +52,32 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import fr.paris.lutece.plugins.blobstore.service.BlobStoreFileItem;
+import fr.paris.lutece.plugins.blobstore.service.IBlobStoreService;
+import fr.paris.lutece.plugins.blobstore.service.NoSuchBlobException;
+import fr.paris.lutece.plugins.crm.modules.form.service.CRMParametersService;
+import fr.paris.lutece.plugins.crm.modules.form.service.ICRMParametersService;
+import fr.paris.lutece.plugins.crm.modules.form.util.Constants;
+import fr.paris.lutece.plugins.crmclient.service.ICRMClientService;
+import fr.paris.lutece.plugins.crmclient.service.authenticator.IAuthenticatorService;
+import fr.paris.lutece.plugins.crmclient.util.CRMException;
+import fr.paris.lutece.plugins.crmclient.util.CrmClientConstants;
+import fr.paris.lutece.plugins.form.business.Form;
+import fr.paris.lutece.plugins.form.business.FormSubmit;
+import fr.paris.lutece.plugins.form.service.draft.DraftBackupService;
+import fr.paris.lutece.plugins.form.service.upload.FormAsynchronousUploadHandler;
+import fr.paris.lutece.plugins.form.utils.FormUtils;
+import fr.paris.lutece.plugins.form.utils.JSONUtils;
+import fr.paris.lutece.plugins.genericattributes.business.Response;
+import fr.paris.lutece.portal.service.i18n.I18nService;
+import fr.paris.lutece.portal.service.message.SiteMessage;
+import fr.paris.lutece.portal.service.message.SiteMessageException;
+import fr.paris.lutece.portal.service.message.SiteMessageService;
+import fr.paris.lutece.portal.service.security.LuteceUser;
+import fr.paris.lutece.portal.service.security.SecurityService;
+import fr.paris.lutece.portal.service.util.AppException;
+import fr.paris.lutece.portal.service.util.AppLogService;
+
 
 /**
  * CRM Draft Backup Service
@@ -85,7 +85,7 @@ import org.apache.log4j.Logger;
 public class CRMDraftBackupService implements DraftBackupService
 {
     private static Logger _logger = Logger.getLogger( "lutece.crm" );
-    private BlobStoreService _blobStoreService;
+    private IBlobStoreService _blobStoreService;
     @Inject
     private ICRMParametersService _crmParametersService;
     @Inject
@@ -97,7 +97,7 @@ public class CRMDraftBackupService implements DraftBackupService
      * Set the blobstore service of this draft backup service
      * @param blobStoreService The blobstore service
      */
-    public void setBlobStoreService( BlobStoreService blobStoreService )
+    public void setBlobStoreService( IBlobStoreService blobStoreService )
     {
         _blobStoreService = blobStoreService;
     }
