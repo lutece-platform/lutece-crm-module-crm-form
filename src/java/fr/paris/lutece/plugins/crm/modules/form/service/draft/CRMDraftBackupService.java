@@ -533,7 +533,7 @@ public class CRMDraftBackupService implements DraftBackupService
                                     {
                                         fileItem = new BlobStoreFileItem( strBlobId, _blobStoreService );
                                         FormAsynchronousUploadHandler.getHandler( ).addFileItemToUploadedFile(
-                                                fileItem, Integer.toString( nIdEntry ), session );
+                                                fileItem, Integer.toString( nIdEntry ), session.getId() );
                                     }
                                     catch ( NoSuchBlobException nsbe )
                                     {
