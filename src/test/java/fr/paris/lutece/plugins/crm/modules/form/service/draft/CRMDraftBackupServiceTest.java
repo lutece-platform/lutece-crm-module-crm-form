@@ -41,7 +41,7 @@ import java.util.Map;
 
 import fr.paris.lutece.plugins.blobstore.service.IBlobStoreService;
 import fr.paris.lutece.plugins.crm.modules.form.util.Constants;
-import fr.paris.lutece.plugins.form.utils.JSONUtils;
+import fr.paris.lutece.plugins.crm.modules.form.util.JSONUtils;
 import fr.paris.lutece.plugins.genericattributes.business.Entry;
 import fr.paris.lutece.plugins.genericattributes.business.EntryType;
 import fr.paris.lutece.plugins.genericattributes.business.Response;
@@ -66,7 +66,7 @@ public class CRMDraftBackupServiceTest extends LuteceTestCase
         MokeHttpSession session = new MokeHttpSession( );
         session.setAttribute( Constants.SESSION_ATTRIBUTE_DEMAND_DATA_PARAMS, strKey );
 
-        byte[] bShouldStore = JSONUtils.buildJson( mapResponses, nIdForm, session.getId( ) ).getBytes( );
+        byte[] bShouldStore = JSONUtils.buildJson( mapResponses, nIdForm, session ).getBytes( );
 
         backupService.saveResponses( mapResponses, nIdForm, session );
 

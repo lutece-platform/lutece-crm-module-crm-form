@@ -58,6 +58,7 @@ import fr.paris.lutece.plugins.blobstore.service.NoSuchBlobException;
 import fr.paris.lutece.plugins.crm.modules.form.service.CRMParametersService;
 import fr.paris.lutece.plugins.crm.modules.form.service.ICRMParametersService;
 import fr.paris.lutece.plugins.crm.modules.form.util.Constants;
+import fr.paris.lutece.plugins.crm.modules.form.util.JSONUtils;
 import fr.paris.lutece.plugins.crmclient.service.ICRMClientService;
 import fr.paris.lutece.plugins.crmclient.service.authenticator.IAuthenticatorService;
 import fr.paris.lutece.plugins.crmclient.util.CRMException;
@@ -67,8 +68,8 @@ import fr.paris.lutece.plugins.form.business.FormSubmit;
 import fr.paris.lutece.plugins.form.service.draft.DraftBackupService;
 import fr.paris.lutece.plugins.form.service.upload.FormAsynchronousUploadHandler;
 import fr.paris.lutece.plugins.form.utils.FormUtils;
-import fr.paris.lutece.plugins.form.utils.JSONUtils;
 import fr.paris.lutece.plugins.genericattributes.business.Response;
+import fr.paris.lutece.plugins.genericattributes.service.entrytype.IEntryTypeService;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.message.SiteMessage;
 import fr.paris.lutece.portal.service.message.SiteMessageException;
@@ -207,7 +208,7 @@ public class CRMDraftBackupService implements DraftBackupService
         {
             storeFiles( mapResponses, session );
 
-            String strJsonResponse = JSONUtils.buildJson( mapResponses, nIdForm, session.getId( ) );
+            String strJsonResponse = JSONUtils.buildJson( mapResponses, nIdForm, session );
             _blobStoreService.update( strKey, strJsonResponse.getBytes( ) );
         }
     }
@@ -326,8 +327,8 @@ public class CRMDraftBackupService implements DraftBackupService
         {
             int nIdEntry = entryMap.getKey( );
             String strIdEntry = Integer.toString( nIdEntry );
-            List<FileItem> uploadedFiles = FormAsynchronousUploadHandler.getHandler( ).getFileItems( strIdEntry,
-                    session.getId( ) );
+            List<FileItem> uploadedFiles = FormAsynchronousUploadHandler.getHandler( ).getListUploadedFiles( IEntryTypeService.PREFIX_ATTRIBUTE + strIdEntry,
+                    session);
 
             if ( uploadedFiles != null )
             {
@@ -532,8 +533,11 @@ public class CRMDraftBackupService implements DraftBackupService
                                     try
                                     {
                                         fileItem = new BlobStoreFileItem( strBlobId, _blobStoreService );
-                                        FormAsynchronousUploadHandler.getHandler( ).addFileItemToUploadedFile(
-                                                fileItem, Integer.toString( nIdEntry ), session.getId() );
+                                        
+                                        FormAsynchronousUploadHandler.getHandler(  )
+                                        .addFileItemToUploadedFilesList( fileItem,
+                                        		IEntryTypeService.PREFIX_ATTRIBUTE + Integer.toString( nIdEntry ), request );
+                                       
                                     }
                                     catch ( NoSuchBlobException nsbe )
                                     {
