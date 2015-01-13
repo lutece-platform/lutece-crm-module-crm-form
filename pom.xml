@@ -1,17 +1,16 @@
-﻿<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
         <artifactId>lutece-plugins-pom</artifactId>
         <groupId>fr.paris.lutece.plugins</groupId>
         <version>3.7</version>
     </parent>
-  
     <modelVersion>4.0.0</modelVersion>
     <groupId>fr.paris.lutece.plugins</groupId>
     <artifactId>module-crm-form</artifactId>
     <packaging>lutece-plugin</packaging>
     <version>2.0.0-SNAPSHOT</version>
-    <name>Lutece crm form module</name>
-	
+    <name>Lutece crm form module</name>	
     <repositories>
         <repository>
           <id>luteceSnapshot</id>
@@ -29,7 +28,6 @@
               <enabled>false</enabled>
           </snapshots>
         </repository>
-	
     </repositories>
     <dependencies>
     	<dependency>
@@ -57,9 +55,7 @@
             <version>[1.0.0-SNAPSHOT,)</version>
             <type>jar</type>
         </dependency>
-        
     </dependencies>
-	
     <properties>
         <componentName>crm-form</componentName>
         <jiraProjectName>CRMFORM</jiraProjectName>
@@ -70,5 +66,4 @@
         <developerConnection>scm:svn:https://dev.lutece.paris.fr/svn/lutece/portal/trunk/plugins/applications/module-crm-form</developerConnection>
         <url>http://dev.lutece.paris.fr/viewvc/lutece/portal/trunk/plugins/applications/module-crm-form</url>
     </scm>
-
 </project>
