@@ -29,8 +29,8 @@
               <enabled>false</enabled>
           </snapshots>
         </repository>
-    </repositories>
 	
+    </repositories>
     <dependencies>
     	<dependency>
             <groupId>fr.paris.lutece</groupId>
