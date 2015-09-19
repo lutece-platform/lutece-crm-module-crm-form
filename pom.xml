@@ -66,9 +66,9 @@
     </properties>
     
     <scm>
-        <connection>scm:git:https://github.com/lutece-platform/lutece-crm-module-crm-form.git</connection>
-        <developerConnection>scm:git:https://github.com/lutece-platform/lutece-crm-module-crm-form.git</developerConnection>
-        <url>https://github.com/lutece-platform/lutece-crm-module-crm-form.git</url>
+        <connection>scm:git:https://github.com/lutece-secteur-public/gru-module-crm-form.git</connection>
+        <developerConnection>scm:git:https://github.com/lutece-secteur-public/gru-module-crm-form.git</developerConnection>
+        <url>https://github.com/lutece-secteur-public/gru-module-crm-form.git</url>
       <tag>HEAD</tag>
   </scm>
     
